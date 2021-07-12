@@ -15,6 +15,7 @@ type Things interface {
 	Equals(thing Things) bool
 	AddDateFormat(format string)
 	CheckMap(m map[string]interface{}) (bool, error)
+	CheckStruct(s interface{}) (bool, error)
 	Things() []*Thing
 }
 
@@ -38,12 +39,12 @@ func NewThings() *things {
 	}
 }
 
-func (t *things) Things() []*Thing {
+func (t things) Things() []*Thing {
 	return t.things
 }
 
 // String returns a string representation of the structure
-func (t *things) String() string {
+func (t things) String() string {
 	if len(t.Things()) == 0 {
 		return ""
 	}
@@ -67,7 +68,7 @@ func (t *things) Add(thing *Thing) {
 
 
 // Equals returns true if both instances are the same
-func (t *things) Equals(t2 Things) bool {
+func (t things) Equals(t2 Things) bool {
 	if t2 == nil {
 		return false
 	}

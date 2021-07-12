@@ -20,9 +20,9 @@ func NewParser(r io.Reader) *Parser {
 	}
 }
 
-func (p *Parser) Parse() (*things, error) {
+func (p *Parser) Parse() (Things, error) {
 
-	ts := new(things)
+	ts := NewThings()
 	for {
 		thing := new(Thing)
 		step := 0
