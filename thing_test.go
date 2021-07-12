@@ -126,3 +126,52 @@ func TestThings_CheckMap(t1 *testing.T) {
 		})
 	}
 }
+
+func Test_things_CheckStruct(t1 *testing.T) {
+
+	type TestStruct struct {
+		Title string
+		Age int
+	}
+
+	type args struct {
+		s interface{}
+	}
+	tests := []struct {
+		name    string
+		query   string
+		args    interface{}
+		want    bool
+		wantErr bool
+	}{
+		{ name: "Test 1", query: `Title == "foo bar" & Age < 43`, args: &TestStruct{
+			Title: "foo bar",
+			Age:   42,
+		}, want: true,wantErr: false},
+	}
+	for _, tt := range tests {
+		t1.Run(tt.name, func(t1 *testing.T) {
+			p := NewParser(strings.NewReader(tt.query))
+			t, err := p.Parse()
+			if (err != nil) != tt.wantErr {
+				t1.Errorf("CheckStruct() parser error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if t == nil {
+				t1.Errorf("CheckStruct() parser error")
+				return
+			}
+
+			t.AddDateFormat("2006-01-02")
+
+			got, err := t.CheckStruct(tt.args)
+			if (err != nil) != tt.wantErr {
+				t1.Errorf("CheckStruct() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t1.Errorf("CheckStruct() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

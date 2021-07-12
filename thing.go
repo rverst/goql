@@ -2,6 +2,7 @@ package goql
 
 import (
 	"fmt"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -81,7 +82,6 @@ func (t *things) Equals(t2 Things) bool {
 }
 
 func (t *things) CheckMap(m map[string]interface{}) (bool, error) {
-
 	r := false
 	for _, thing := range t.Things() {
 		v, ok := m[thing.Key]
@@ -110,6 +110,41 @@ func (t *things) CheckMap(m map[string]interface{}) (bool, error) {
 	}
 	return r, nil
 }
+
+func (t *things) CheckStruct(s interface{}) (bool, error)  {
+	r := false
+
+	st := reflect.ValueOf(s).Elem()
+
+	for _, thing := range t.Things() {
+		fv := st.FieldByName(thing.Key)
+		if !fv.IsValid() {
+			return false, fmt.Errorf("key not found: %s", thing.Key)
+		}
+		x, err := t.checkVal(thing, fv.Interface())
+		if err != nil {
+			return x, err
+		}
+		if thing.Link == LNK_AND {
+			if thing.Negate {
+				r = r && !x
+			} else {
+				r = r && x
+			}
+		} else if thing.Link == LNK_OR {
+			if thing.Negate {
+				r = r || !x
+			} else {
+				r = r || x
+			}
+		} else {
+			r = x
+		}
+	}
+
+	return r, nil
+}
+
 
 func (t *things) AddDateFormat(format string) {
 	t.dateFormats = append(t.dateFormats, format)
