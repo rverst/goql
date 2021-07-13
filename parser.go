@@ -5,6 +5,8 @@ import (
 	"io"
 )
 
+var ErrEmptyQuery = fmt.Errorf("query is empty, nothing to parse")
+
 type Parser struct {
 	s   *Scanner
 	buf struct {
@@ -22,6 +24,9 @@ func NewParser(r io.Reader) *Parser {
 
 func (p *Parser) Parse() (Conditions, error) {
 
+	if p.s.isEmpty() {
+		return nil, ErrEmptyQuery
+	}
 	ts := NewConditions()
 	for {
 		thing := new(Condition)
