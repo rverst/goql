@@ -1,11 +1,12 @@
 package goql
 
 import (
+	"errors"
 	"fmt"
 	"io"
 )
 
-var ErrEmptyQuery = fmt.Errorf("query is empty, nothing to parse")
+var ErrEmptyQuery = errors.New("query is empty, nothing to parse")
 
 type Parser struct {
 	s   *Scanner
@@ -29,7 +30,7 @@ func (p *Parser) Parse() (Conditions, error) {
 	}
 	ts := NewConditions()
 	for {
-		thing := new(Condition)
+		cond := new(Condition)
 		step := 0
 		for {
 			t, l := p.scanIgnoreWhitespace()
@@ -41,11 +42,11 @@ func (p *Parser) Parse() (Conditions, error) {
 			switch step {
 			case 0:
 				if t.isLink() {
-					thing.Link = t
+					cond.Link = t
 					continue
 				}
 				if t == LNK_NOT {
-					thing.Negate = true
+					cond.Negate = true
 					continue
 				}
 				if !t.isLiteral() {
@@ -54,26 +55,25 @@ func (p *Parser) Parse() (Conditions, error) {
 				if l == "" {
 					return nil, fmt.Errorf("empty literal now allowed as key")
 				}
-				thing.Key = l
+				cond.Key = l
 			case 1:
 				if !t.isOperator() {
 					return nil, fmt.Errorf("operator expected, got: (%s|%s)", t, l)
 				}
-				thing.Operator = t
+				cond.Operator = t
 			case 2:
 				if !t.isLiteral() {
 					return nil, fmt.Errorf("expression literal expected, got: (%s|%s)", t, l)
 				}
-				thing.ExprType = t
-				thing.Expression = l
+				cond.ExprType = t
+				cond.Expression = l
 			}
 			step++
 			if step > 2 {
 				break
 			}
 		}
-		ts.Add(thing)
-		fmt.Printf("THING: %v\n", thing)
+		ts.Add(cond)
 	}
 }
 
