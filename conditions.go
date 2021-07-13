@@ -81,6 +81,8 @@ func (t cons) Equals(t2 Conditions) bool {
 	return t.String() == t2.String()
 }
 
+// CheckMap checks the values in the map if they met the conditions
+// for the corresponding key. Keys are checked case sensitive.
 func (t *cons) CheckMap(m map[string]interface{}) (bool, error) {
 	r := false
 	for _, thing := range t.Conditions() {
@@ -88,65 +90,84 @@ func (t *cons) CheckMap(m map[string]interface{}) (bool, error) {
 		if !ok {
 			return false, fmt.Errorf("key not found: %s", thing.Key)
 		}
-		x, err := t.checkVal(thing, v)
-		if err != nil {
-			return x, err
-		}
-		if thing.Link == LNK_AND {
-			if thing.Negate {
-				r = r && !x
-			} else {
-				r = r && x
-			}
-		} else if thing.Link == LNK_OR {
-			if thing.Negate {
-				r = r || !x
-			} else {
-				r = r || x
-			}
-		} else {
-			r = x
+		if err := t.check(thing, v, &r); err != nil {
+			return false, err
 		}
 	}
 	return r, nil
 }
 
+// CheckMapI checks the values in the ma if they met the conditions
+// for the corresponding key. Keys are checked case insensitive.
+func (t *cons) CheckMapI(m map[string]interface{}) (bool, error) {
+	r := false
+	for _, thing := range t.Conditions() {
+
+		var v interface{}
+		var found = false
+		for k, val := range m {
+			if strings.ToLower(thing.Key) == strings.ToLower(k) {
+				v = val
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false, fmt.Errorf("key not found: %s", thing.Key)
+		}
+
+		if err := t.check(thing, v, &r); err != nil {
+			return false, err
+		}
+	}
+	return r, nil
+}
+
+// CheckStruct checks the fields of the struct if they
+// met the conditions. Fields are case sensitive
 func (t *cons) CheckStruct(s interface{}) (bool, error) {
 	r := false
 
 	st := reflect.ValueOf(s).Elem()
-
 	for _, thing := range t.Conditions() {
 		fv := st.FieldByName(thing.Key)
 		if !fv.IsValid() {
 			return false, fmt.Errorf("key not found: %s", thing.Key)
 		}
-		x, err := t.checkVal(thing, fv.Interface())
-		if err != nil {
-			return x, err
-		}
-		if thing.Link == LNK_AND {
-			if thing.Negate {
-				r = r && !x
-			} else {
-				r = r && x
-			}
-		} else if thing.Link == LNK_OR {
-			if thing.Negate {
-				r = r || !x
-			} else {
-				r = r || x
-			}
-		} else {
-			r = x
+
+		if err := t.check(thing, fv.Interface(), &r); err != nil {
+			return false, err
 		}
 	}
-
 	return r, nil
 }
 
 func (t *cons) AddDateFormat(format string) {
 	t.dateFormats = append(t.dateFormats, format)
+}
+
+func (t *cons) check(thing *Condition, v interface{}, r *bool) error {
+
+	x, err := t.checkVal(thing, v)
+	if err != nil {
+		return err
+	}
+	if thing.Link == LNK_AND {
+		if thing.Negate {
+			*r = *r && !x
+		} else {
+			*r = *r && x
+		}
+	} else if thing.Link == LNK_OR {
+		if thing.Negate {
+			*r = *r || !x
+		} else {
+			*r = *r || x
+		}
+	} else {
+		*r = x
+	}
+	return nil
 }
 
 func (t *cons) checkVal(th *Condition, v interface{}) (bool, error) {
