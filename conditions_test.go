@@ -12,15 +12,15 @@ func TestThings_CheckMap(t1 *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		query  	string
+		query   string
 		args    args
 		want    bool
 		wantErr bool
 	}{
 		{
-			name:    "Test 1",
-			query:   `title == "foo BAR"`,
-			args:    args{
+			name:  "Test 1",
+			query: `title == "foo BAR"`,
+			args: args{
 				m: map[string]interface{}{
 					"title": "foo bar",
 				},
@@ -29,9 +29,9 @@ func TestThings_CheckMap(t1 *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:    "Test 2",
-			query:   `title === "foo BAR"`,
-			args:    args{
+			name:  "Test 2",
+			query: `title === "foo BAR"`,
+			args: args{
 				m: map[string]interface{}{
 					"title": "foo bar",
 				},
@@ -40,11 +40,11 @@ func TestThings_CheckMap(t1 *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:    "Test 3",
-			query:   `title == "foo BAR" && not disabled == t`,
-			args:    args{
+			name:  "Test 3",
+			query: `title == "foo BAR" && not disabled == t`,
+			args: args{
 				m: map[string]interface{}{
-					"title": "foo bar",
+					"title":    "foo bar",
 					"disabled": false,
 				},
 			},
@@ -52,11 +52,11 @@ func TestThings_CheckMap(t1 *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:    "Test 4",
-			query:   `title == "foo BAR" && not disabled == t`,
-			args:    args{
+			name:  "Test 4",
+			query: `title == "foo BAR" && not disabled == t`,
+			args: args{
 				m: map[string]interface{}{
-					"title": "foo bar",
+					"title":    "foo bar",
 					"disabled": true,
 				},
 			},
@@ -64,36 +64,36 @@ func TestThings_CheckMap(t1 *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:    "Test 5",
-			query:   `title == "foo BAR" && age > 42`,
-			args:    args{
+			name:  "Test 5",
+			query: `title == "foo BAR" && age > 42`,
+			args: args{
 				m: map[string]interface{}{
 					"title": "foo bar",
-					"age": 43,
+					"age":   43,
 				},
 			},
 			want:    true,
 			wantErr: false,
 		},
 		{
-			name:    "Test 6",
-			query:   `title == "foo BAR" && age > 42`,
-			args:    args{
+			name:  "Test 6",
+			query: `title == "foo BAR" && age > 42`,
+			args: args{
 				m: map[string]interface{}{
 					"title": "foo bar",
-					"age": 39,
+					"age":   39,
 				},
 			},
 			want:    false,
 			wantErr: false,
 		},
 		{
-			name:    "Test 7",
-			query:   `title == "foo BAR" && date > '2008-01-02'`,
-			args:    args{
+			name:  "Test 7",
+			query: `title == "foo BAR" && date > '2008-01-02'`,
+			args: args{
 				m: map[string]interface{}{
 					"title": "foo bar",
-					"date": time.Date(2010, 1, 1, 0, 0, 0, 0, time.UTC),
+					"date":  time.Date(2010, 1, 1, 0, 0, 0, 0, time.UTC),
 				},
 			},
 			want:    true,
@@ -131,7 +131,7 @@ func Test_things_CheckStruct(t1 *testing.T) {
 
 	type TestStruct struct {
 		Title string
-		Age int
+		Age   int
 	}
 
 	type args struct {
@@ -144,10 +144,10 @@ func Test_things_CheckStruct(t1 *testing.T) {
 		want    bool
 		wantErr bool
 	}{
-		{ name: "Test 1", query: `Title == "foo bar" & Age < 43`, args: &TestStruct{
+		{name: "Test 1", query: `Title == "foo bar" & Age < 43`, args: &TestStruct{
 			Title: "foo bar",
 			Age:   42,
-		}, want: true,wantErr: false},
+		}, want: true, wantErr: false},
 	}
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {

@@ -20,11 +20,11 @@ func NewParser(r io.Reader) *Parser {
 	}
 }
 
-func (p *Parser) Parse() (Things, error) {
+func (p *Parser) Parse() (Conditions, error) {
 
-	ts := NewThings()
+	ts := NewConditions()
 	for {
-		thing := new(Thing)
+		thing := new(Condition)
 		step := 0
 		for {
 			t, l := p.scanIgnoreWhitespace()

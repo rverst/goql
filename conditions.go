@@ -9,17 +9,17 @@ import (
 	"time"
 )
 
-type Things interface {
+type Conditions interface {
 	String() string
-	Add(thing *Thing)
-	Equals(thing Things) bool
+	Add(thing *Condition)
+	Equals(thing Conditions) bool
 	AddDateFormat(format string)
 	CheckMap(m map[string]interface{}) (bool, error)
 	CheckStruct(s interface{}) (bool, error)
-	Things() []*Thing
+	Conditions() []*Condition
 }
 
-type Thing struct {
+type Condition struct {
 	Link       Token
 	Negate     bool
 	Key        string
@@ -28,24 +28,24 @@ type Thing struct {
 	Operator   Token
 }
 
-type things struct {
-	things      []*Thing
+type cons struct {
+	things      []*Condition
 	dateFormats []string
 }
 
-func NewThings() *things {
-	return &things{
-		dateFormats: []string { time.RFC3339 },
+func NewConditions() Conditions {
+	return &cons{
+		dateFormats: []string{time.RFC3339},
 	}
 }
 
-func (t things) Things() []*Thing {
+func (t cons) Conditions() []*Condition {
 	return t.things
 }
 
 // String returns a string representation of the structure
-func (t things) String() string {
-	if len(t.Things()) == 0 {
+func (t cons) String() string {
+	if len(t.Conditions()) == 0 {
 		return ""
 	}
 	sb := strings.Builder{}
@@ -59,32 +59,31 @@ func (t things) String() string {
 }
 
 // Add adds a thing to the collection
-func (t *things) Add(thing *Thing) {
-	if t.Things() == nil {
-		t.things = make([]*Thing, 0)
+func (t *cons) Add(thing *Condition) {
+	if t.Conditions() == nil {
+		t.things = make([]*Condition, 0)
 	}
 	t.things = append(t.things, thing)
 }
 
-
 // Equals returns true if both instances are the same
-func (t things) Equals(t2 Things) bool {
+func (t cons) Equals(t2 Conditions) bool {
 	if t2 == nil {
 		return false
 	}
-	if len(t.Things()) != len(t2.Things()) {
+	if len(t.Conditions()) != len(t2.Conditions()) {
 		return false
 	}
-	if len(t.Things()) == 0 {
+	if len(t.Conditions()) == 0 {
 		return true
 	}
 
 	return t.String() == t2.String()
 }
 
-func (t *things) CheckMap(m map[string]interface{}) (bool, error) {
+func (t *cons) CheckMap(m map[string]interface{}) (bool, error) {
 	r := false
-	for _, thing := range t.Things() {
+	for _, thing := range t.Conditions() {
 		v, ok := m[thing.Key]
 		if !ok {
 			return false, fmt.Errorf("key not found: %s", thing.Key)
@@ -112,12 +111,12 @@ func (t *things) CheckMap(m map[string]interface{}) (bool, error) {
 	return r, nil
 }
 
-func (t *things) CheckStruct(s interface{}) (bool, error)  {
+func (t *cons) CheckStruct(s interface{}) (bool, error) {
 	r := false
 
 	st := reflect.ValueOf(s).Elem()
 
-	for _, thing := range t.Things() {
+	for _, thing := range t.Conditions() {
 		fv := st.FieldByName(thing.Key)
 		if !fv.IsValid() {
 			return false, fmt.Errorf("key not found: %s", thing.Key)
@@ -146,12 +145,11 @@ func (t *things) CheckStruct(s interface{}) (bool, error)  {
 	return r, nil
 }
 
-
-func (t *things) AddDateFormat(format string) {
+func (t *cons) AddDateFormat(format string) {
 	t.dateFormats = append(t.dateFormats, format)
 }
 
-func (t *things)checkVal(th *Thing, v interface{}) (bool, error) {
+func (t *cons) checkVal(th *Condition, v interface{}) (bool, error) {
 	switch v.(type) {
 	case string:
 		return checkString(th, v.(string))
@@ -185,7 +183,7 @@ func (t *things)checkVal(th *Thing, v interface{}) (bool, error) {
 	return false, fmt.Errorf("unsupported type: %T", v)
 }
 
-func checkString(t *Thing, s string) (bool, error) {
+func checkString(t *Condition, s string) (bool, error) {
 	switch t.Operator {
 	case OP_EQ:
 		return t.Expression == s, nil
@@ -217,7 +215,7 @@ func checkString(t *Thing, s string) (bool, error) {
 	return false, fmt.Errorf("opearator unsupported for string check: %s", t.Operator)
 }
 
-func checkTime(t *Thing, t2 time.Time, formats []string) (bool, error) {
+func checkTime(t *Condition, t2 time.Time, formats []string) (bool, error) {
 	if t.ExprType != TIME {
 		return checkString(t, fmt.Sprintf("%s", t2))
 	}
@@ -252,7 +250,7 @@ func checkTime(t *Thing, t2 time.Time, formats []string) (bool, error) {
 
 }
 
-func checkBool(t *Thing, b bool) (bool, error) {
+func checkBool(t *Condition, b bool) (bool, error) {
 	if t.ExprType != BOOLEAN {
 		return checkString(t, fmt.Sprintf("%t", b))
 	}
@@ -269,7 +267,7 @@ func checkBool(t *Thing, b bool) (bool, error) {
 	return false, fmt.Errorf("opearator unsupported for bool check: %s", t.Operator)
 }
 
-func checkInt64(t *Thing, i int64) (bool, error) {
+func checkInt64(t *Condition, i int64) (bool, error) {
 	if t.ExprType != INTEGER {
 		return checkString(t, fmt.Sprintf("%d", i))
 	}
@@ -294,7 +292,7 @@ func checkInt64(t *Thing, i int64) (bool, error) {
 	return false, fmt.Errorf("opearator unsupported for int check: %s", t.Operator)
 }
 
-func checkUint64(t *Thing, i uint64) (bool, error) {
+func checkUint64(t *Condition, i uint64) (bool, error) {
 	if t.ExprType != INTEGER {
 		return checkString(t, fmt.Sprintf("%d", i))
 	}
@@ -319,7 +317,7 @@ func checkUint64(t *Thing, i uint64) (bool, error) {
 	return false, fmt.Errorf("opearator unsupported for uint check: %s", t.Operator)
 }
 
-func checkFloat(t *Thing, f float64) (bool, error) {
+func checkFloat(t *Condition, f float64) (bool, error) {
 	if t.ExprType != FLOAT {
 		return checkString(t, fmt.Sprintf("%f", f))
 	}
